@@ -72,6 +72,7 @@
 #define portPRIORITY_GROUP_MASK               ( 0x07UL << 8UL )
 #define portPRIGROUP_SHIFT                    ( 8UL )
 
+
 /* Masks off all bits but the VECTACTIVE bits in the ICSR register. */
 #define portVECTACTIVE_MASK                   ( 0xFFUL )
 
@@ -386,11 +387,30 @@ BaseType_t xPortStartScheduler( void )
 /*-----------------------------------------------------------*/
 
 void vPortEndScheduler( void )
-{
-    /* Not implemented in ports where there is nothing to return to.
-     * Artificially force an assert. */
-    configASSERT( uxCriticalNesting == 1000UL );
-}
+ {
+     /* Not implemented in ports where there is nothing to return to.
+		@@ -498,14 +576,20 @@
+      * save and then restore the interrupt mask value as its value is already
+      * known. */
+    portDISABLE_INTERRUPTS();
+	traceISR_ENTER();
+     {
+         /* Increment the RTOS tick. */
+         if( xTaskIncrementTick() != pdFALSE )
+         {
+			traceISR_EXIT_TO_SCHEDULER();
+             /* A context switch is required.  Context switching is performed in
+              * the PendSV interrupt.  Pend the PendSV interrupt. */
+             portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT;
+         }
+		else
+		{
+			traceISR_EXIT();
+		}
+     }
+     portENABLE_INTERRUPTS();
+ }
+
 /*-----------------------------------------------------------*/
 
 void vPortEnterCritical( void )
@@ -488,14 +508,20 @@ void xPortSysTickHandler( void )
      * save and then restore the interrupt mask value as its value is already
      * known. */
     portDISABLE_INTERRUPTS();
+	traceISR_ENTER();
     {
         /* Increment the RTOS tick. */
         if( xTaskIncrementTick() != pdFALSE )
         {
+			traceISR_EXIT_TO_SCHEDULER();
             /* A context switch is required.  Context switching is performed in
              * the PendSV interrupt.  Pend the PendSV interrupt. */
             portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT;
         }
+		else
+		{
+			traceISR_EXIT();
+		}
     }
     portENABLE_INTERRUPTS();
 }

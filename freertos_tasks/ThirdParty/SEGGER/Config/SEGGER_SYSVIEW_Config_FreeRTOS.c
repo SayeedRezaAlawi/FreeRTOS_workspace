@@ -66,7 +66,7 @@ extern const SEGGER_SYSVIEW_OS_API SYSVIEW_X_OS_TraceAPI;
 #define SYSVIEW_APP_NAME        "FreeRTOS Hello world Application"
 
 // The target device name
-#define SYSVIEW_DEVICE_NAME     "STM32F407-DISC-1"
+#define SYSVIEW_DEVICE_NAME     "STM32F746-DISC-1"
 
 // Frequency of the timestamp. Must match SEGGER_SYSVIEW_GET_TIMESTAMP in SEGGER_SYSVIEW_Conf.h
 #define SYSVIEW_TIMESTAMP_FREQ  (configCPU_CLOCK_HZ)

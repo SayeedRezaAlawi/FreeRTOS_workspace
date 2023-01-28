@@ -150,7 +150,7 @@ files. */
 
 #endif /* __IAR_SYSTEMS_ASM__ */
 
-//#include "SEGGER_SYSVIEW_FreeRTOS.h"
+#include "SEGGER_SYSVIEW_FreeRTOS.h"
 
 #endif /* FREERTOS_CONFIG_H */
 
