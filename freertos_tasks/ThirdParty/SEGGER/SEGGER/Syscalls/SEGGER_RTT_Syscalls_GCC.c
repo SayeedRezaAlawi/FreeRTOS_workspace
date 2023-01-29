@@ -54,10 +54,9 @@ Revision: $Rev: 20755 $
 ----------------------------------------------------------------------
 */
 #if (defined __GNUC__) && !(defined __SES_ARM) && !(defined __CROSSWORKS_ARM) && !(defined __ARMCC_VERSION) && !(defined __CC_ARM)
-
+#if(SYSVIEW_RTT == 1 || SYSVIEW_ONE_SHOT == 1)
 #include <reent.h>  // required for _write_r
 #include "SEGGER_RTT.h"
-
 
 /*********************************************************************
 *
@@ -97,6 +96,7 @@ _ssize_t _write_r(struct _reent *r, int file, const void *ptr, size_t len);
 *   including stdout.
 *   Write data via RTT.
 */
+
 _ssize_t _write(int file, const void *ptr, size_t len) {
   (void) file;  /* Not used, avoid warning */
   SEGGER_RTT_Write(0, ptr, len);
@@ -113,6 +113,7 @@ _ssize_t _write(int file, const void *ptr, size_t len) {
 *   including stdout.
 *   Write data via RTT.
 */
+
 _ssize_t _write_r(struct _reent *r, int file, const void *ptr, size_t len) {
   (void) file;  /* Not used, avoid warning */
   (void) r;     /* Not used, avoid warning */
@@ -120,5 +121,6 @@ _ssize_t _write_r(struct _reent *r, int file, const void *ptr, size_t len) {
   return len;
 }
 
+#endif
 #endif
 /****** End Of File *************************************************/

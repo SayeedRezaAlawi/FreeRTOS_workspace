@@ -37,7 +37,8 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+#define SYSVIEW_RTT				0
+#define SYSVIEW_ONE_SHOT		0
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -96,14 +97,20 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   //Enable the CYCCNT counter.
-  SEGGER_UART_init(500000);
+
 
   DWT_CTRL |= ( 1 << 0);
 
-
+#if (SYSVIEW_RTT == 1)
+  SEGGER_UART_init(500000);
   SEGGER_SYSVIEW_Conf();
+#endif
 
-//  SEGGER_SYSVIEW_Start();
+#if (SYSVIEW_ONE_SHOT == 1)
+  SEGGER_SYSVIEW_Conf();
+  SEGGER_SYSVIEW_Start();
+#endif
+
 
   status = xTaskCreate(task1_handler, "Task-1", 200, "Hello World from Task-1", 2, &task1_handle);
 
@@ -707,26 +714,34 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 static void task1_handler (void* parameters)
 {
+#if (SYSVIEW_RTT == 1 || SYSVIEW_ONE_SHOT == 1)
 	char msg[100];
+#endif
 	while(1)
 	{
-//		printf("%s\n", (char*)parameters);
+#if (SYSVIEW_RTT == 1 || SYSVIEW_ONE_SHOT == 1)
 		sprintf(msg,100,"%s\n",(char*)parameters);
 		SEGGER_SYSVIEW_PrintfTarget(msg);
+#else
+		printf("%s\n", (char*)parameters);
+#endif
 	}
-
 }
 
 static void task2_handler (void* parameters)
 {
+#if (SYSVIEW_RTT == 1 || SYSVIEW_ONE_SHOT == 1)
 	char msg[100];
+#endif
 	while(1)
 	{
-//		printf("%s\n", (char*)parameters);
+#if (SYSVIEW_RTT == 1 || SYSVIEW_ONE_SHOT == 1)
 		sprintf(msg,100,"%s\n",(char*)parameters);
 		SEGGER_SYSVIEW_PrintfTarget(msg);
+#else
+		printf("%s\n", (char*)parameters);
+#endif
 	}
-
 }
 /* USER CODE END 4 */
 

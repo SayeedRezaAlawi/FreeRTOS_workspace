@@ -46,7 +46,8 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-
+#define SYSVIEW_RTT				0
+#define SYSVIEW_ONE_SHOT		0
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
