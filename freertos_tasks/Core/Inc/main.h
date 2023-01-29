@@ -70,8 +70,8 @@ void Error_Handler(void);
 #define FMC_NBL1_GPIO_Port GPIOE
 #define FMC_NBL0_Pin GPIO_PIN_0
 #define FMC_NBL0_GPIO_Port GPIOE
-#define ARDUINO_SCL_D15_Pin GPIO_PIN_8
-#define ARDUINO_SCL_D15_GPIO_Port GPIOB
+#define LED_GREEN_Pin GPIO_PIN_8
+#define LED_GREEN_GPIO_Port GPIOB
 #define ULPI_D7_Pin GPIO_PIN_5
 #define ULPI_D7_GPIO_Port GPIOB
 #define ARDUINO_PWM_D3_Pin GPIO_PIN_4
@@ -94,8 +94,8 @@ void Error_Handler(void);
 #define DCMI_D7_GPIO_Port GPIOE
 #define RMII_TXD0_Pin GPIO_PIN_13
 #define RMII_TXD0_GPIO_Port GPIOG
-#define ARDUINO_SDA_D14_Pin GPIO_PIN_9
-#define ARDUINO_SDA_D14_GPIO_Port GPIOB
+#define LED_RED_Pin GPIO_PIN_9
+#define LED_RED_GPIO_Port GPIOB
 #define VCP_RX_Pin GPIO_PIN_7
 #define VCP_RX_GPIO_Port GPIOB
 #define QSPI_NCS_Pin GPIO_PIN_6
@@ -378,8 +378,8 @@ void Error_Handler(void);
 #define FMC_D10_GPIO_Port GPIOE
 #define ULPI_D4_Pin GPIO_PIN_11
 #define ULPI_D4_GPIO_Port GPIOB
-#define ARDUINO_MISO_D12_Pin GPIO_PIN_14
-#define ARDUINO_MISO_D12_GPIO_Port GPIOB
+#define LED_BLUE_Pin GPIO_PIN_14
+#define LED_BLUE_GPIO_Port GPIOB
 #define ARDUINO_MOSI_PWM_D11_Pin GPIO_PIN_15
 #define ARDUINO_MOSI_PWM_D11_GPIO_Port GPIOB
 

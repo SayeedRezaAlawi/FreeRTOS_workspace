@@ -38,7 +38,7 @@
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
 #define SYSVIEW_RTT				0
-#define SYSVIEW_ONE_SHOT		0
+#define SYSVIEW_ONE_SHOT		1
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -212,6 +212,9 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOH_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, LED_GREEN_Pin|LED_RED_Pin|LED_BLUE_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(OTG_FS_PowerSwitchOn_GPIO_Port, OTG_FS_PowerSwitchOn_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
@@ -268,12 +271,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF12_FMC;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : ARDUINO_SCL_D15_Pin ARDUINO_SDA_D14_Pin */
-  GPIO_InitStruct.Pin = ARDUINO_SCL_D15_Pin|ARDUINO_SDA_D14_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+  /*Configure GPIO pins : LED_GREEN_Pin LED_RED_Pin LED_BLUE_Pin */
+  GPIO_InitStruct.Pin = LED_GREEN_Pin|LED_RED_Pin|LED_BLUE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : ULPI_D7_Pin ULPI_D6_Pin ULPI_D5_Pin ULPI_D3_Pin
@@ -701,13 +703,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF9_TIM12;
   HAL_GPIO_Init(ARDUINO_PWM_D6_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : ARDUINO_MISO_D12_Pin ARDUINO_MOSI_PWM_D11_Pin */
-  GPIO_InitStruct.Pin = ARDUINO_MISO_D12_Pin|ARDUINO_MOSI_PWM_D11_Pin;
+  /*Configure GPIO pin : ARDUINO_MOSI_PWM_D11_Pin */
+  GPIO_InitStruct.Pin = ARDUINO_MOSI_PWM_D11_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct.Alternate = GPIO_AF5_SPI2;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(ARDUINO_MOSI_PWM_D11_GPIO_Port, &GPIO_InitStruct);
 
 }
 
@@ -722,6 +724,8 @@ static void task1_handler (void* parameters)
 #if (SYSVIEW_RTT == 1 || SYSVIEW_ONE_SHOT == 1)
 		sprintf(msg,100,"%s\n",(char*)parameters);
 		SEGGER_SYSVIEW_PrintfTarget(msg);
+		HAL_GPIO_TogglePin(GPIOB, LED_GREEN_Pin);
+		HAL_Delay(1000);
 #else
 		printf("%s\n", (char*)parameters);
 #endif
@@ -738,6 +742,8 @@ static void task2_handler (void* parameters)
 #if (SYSVIEW_RTT == 1 || SYSVIEW_ONE_SHOT == 1)
 		sprintf(msg,100,"%s\n",(char*)parameters);
 		SEGGER_SYSVIEW_PrintfTarget(msg);
+		HAL_GPIO_TogglePin(GPIOB, LED_RED_Pin);
+		HAL_Delay(500);
 #else
 		printf("%s\n", (char*)parameters);
 #endif
