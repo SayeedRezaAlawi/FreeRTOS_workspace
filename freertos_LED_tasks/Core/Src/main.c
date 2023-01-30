@@ -54,11 +54,20 @@ static void MX_GPIO_Init(void);
 static void led_green_handler (void* parameters);
 static void led_red_handler (void* parameters);
 static void led_blue_handler (void* parameters);
+static void button_handler (void* parameters);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 extern  void SEGGER_UART_init(uint32_t);
+
+TaskHandle_t ledG_task_handle;
+TaskHandle_t ledR_task_handle;
+TaskHandle_t ledB_task_handle;
+TaskHandle_t btn_task_handle;
+
+TaskHandle_t volatile next_task_handle = NULL;
+
 /* USER CODE END 0 */
 
 /**
@@ -68,10 +77,6 @@ extern  void SEGGER_UART_init(uint32_t);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  TaskHandle_t task1_handle;
-  TaskHandle_t task2_handle;
-  TaskHandle_t task3_handle;
-
 
   BaseType_t status;
   /* USER CODE END 1 */
@@ -104,15 +109,21 @@ int main(void)
   SEGGER_SYSVIEW_Conf();
   SEGGER_SYSVIEW_Start();
 
-  status = xTaskCreate(led_green_handler, "LED_grean_task", 200, NULL, 2, &task1_handle);
+  status = xTaskCreate(led_green_handler, "LED_grean_task", 200, NULL, 3, &ledG_task_handle);
 
   configASSERT(status == pdPASS);
 
-  status = xTaskCreate(led_red_handler, "LED_red_task", 200, NULL, 2, &task2_handle);
+  next_task_handle = ledG_task_handle;
+
+  status = xTaskCreate(led_red_handler, "LED_red_task", 200, NULL, 2, &ledR_task_handle);
 
   configASSERT(status == pdPASS);
 
-  status = xTaskCreate(led_blue_handler, "LED_blue_task", 200, NULL, 2, &task3_handle);
+  status = xTaskCreate(led_blue_handler, "LED_blue_task", 200, NULL, 1, &ledB_task_handle);
+
+  configASSERT(status == pdPASS);
+
+  status = xTaskCreate(button_handler, "Button_task", 200, NULL, 4, &btn_task_handle);
 
   configASSERT(status == pdPASS);
 
@@ -554,6 +565,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
   HAL_GPIO_Init(VCP_TX_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : BTN_Pin */
+  GPIO_InitStruct.Pin = BTN_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(BTN_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : ARDUINO_PWM_D10_Pin */
   GPIO_InitStruct.Pin = ARDUINO_PWM_D10_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -712,32 +729,147 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 static void led_green_handler (void* parameters)
 {
+	//variable hold last wakeup time
+//	TickType_t last_wakeup_time;
+
+	//store the last wakeup time, only run for the first time
+//	last_wakeup_time = xTaskGetTickCount();
+
+	BaseType_t status;
+
 	while(1)
 	{
 		SEGGER_SYSVIEW_PrintfTarget("Toggling Green Led");
 		HAL_GPIO_TogglePin(GPIOB, LED_GREEN_PIN);
-		HAL_Delay(1000);
+
+		status = xTaskNotifyWait(0,0,NULL, pdMS_TO_TICKS(1000));
+		if(status == pdTRUE)
+		{
+			vTaskSuspendAll();
+			next_task_handle = ledR_task_handle;
+			xTaskResumeAll();
+			HAL_GPIO_WritePin(GPIOB, LED_GREEN_PIN, GPIO_PIN_SET);
+			SEGGER_SYSVIEW_PrintfTarget("Delete GREEN LED");
+			vTaskDelete(NULL);
+		}
+
+		//Blocking delay function, which consume the CPU resources
+//		HAL_Delay(1000);
+
+		//non blocking delay using freertos API, but not gaurantee the exact period wake time
+//		vTaskDelay(pdMS_TO_TICKS(1000));
+
+		/*
+		 * non blocking delay using freertos API, gaurantee the exact period wake time
+		 * using last wakeup time and number of ticks to next wakeup time
+		 * the last wakeup time variable will be updated by freertos API
+		 */
+//		vTaskDelayUntil(&last_wakeup_time, pdMS_TO_TICKS(1000));
 	}
 }
 
 static void led_red_handler (void* parameters)
 {
+	//variable hold last wakeup time
+//	TickType_t last_wakeup_time;
+
+	//store the last wakeup time, only run for the first time
+//	last_wakeup_time = xTaskGetTickCount();
+
+	BaseType_t status;
+
 	while(1)
 	{
 		SEGGER_SYSVIEW_PrintfTarget("Toggling Red Led");
 		HAL_GPIO_TogglePin(GPIOB, LED_RED_PIN);
-		HAL_Delay(800);
+
+		status = xTaskNotifyWait(0,0,NULL, pdMS_TO_TICKS(800));
+		if(status == pdTRUE)
+		{
+			vTaskSuspendAll();
+			next_task_handle = ledB_task_handle;
+			xTaskResumeAll();;
+			HAL_GPIO_WritePin(GPIOB, LED_RED_PIN, GPIO_PIN_SET);
+			SEGGER_SYSVIEW_PrintfTarget("Delete RED LED");
+			vTaskDelete(NULL);
+		}
+		//Blocking delay function, which consume the CPU resources
+//		HAL_Delay(800);
+
+		//non blocking delay using freertos API, but not gaurantee the exact period wake time
+//		vTaskDelay(pdMS_TO_TICKS(800));
+
+		/*
+		* non blocking delay using freertos API, gaurantee the exact period wake time
+		* using last wakeup time and number of ticks to next wakeup time
+		* the last wakeup time variable will be updated by freertos API
+		*/
+//		vTaskDelayUntil(&last_wakeup_time, pdMS_TO_TICKS(800));
 	}
 }
 
 
 static void led_blue_handler (void* parameters)
 {
+	//variable hold last wakeup time
+//	TickType_t last_wakeup_time;
+
+	//store the last wakeup time, only run for the first time
+//	last_wakeup_time = xTaskGetTickCount();
+
+	BaseType_t status;
+
 	while(1)
 	{
 		SEGGER_SYSVIEW_PrintfTarget("Toggling Blue Led");
 		HAL_GPIO_TogglePin(GPIOB, LED_BLUE_PIN);
-		HAL_Delay(400);
+
+		status = xTaskNotifyWait(0,0,NULL, pdMS_TO_TICKS(400));
+		if(status == pdTRUE)
+		{
+			vTaskSuspendAll();
+			next_task_handle = NULL;
+			xTaskResumeAll();
+			HAL_GPIO_WritePin(GPIOB, LED_BLUE_PIN, GPIO_PIN_SET);
+			SEGGER_SYSVIEW_PrintfTarget("Delete BLUE LED");
+			vTaskDelete(NULL);
+			vTaskDelete(btn_task_handle);
+		}
+		//Blocking delay function, which consume the CPU resources
+//		HAL_Delay(400);
+
+		//non blocking delay using freertos API, but not gaurantee the exact period wake time
+//		vTaskDelay(pdMS_TO_TICKS(400));
+
+		/*
+		* non blocking delay using freertos API, gaurantee the exact period wake time
+		* using last wakeup time and number of ticks to next wakeup time
+		* the last wakeup time variable will be updated by freertos API
+		*/
+//		vTaskDelayUntil(&last_wakeup_time, pdMS_TO_TICKS(400));
+	}
+}
+
+static void button_handler (void* parameters)
+{
+	uint8_t btn_read = 0;
+	uint8_t prev_read = 0;
+
+	while(1)
+	{
+		btn_read = HAL_GPIO_ReadPin(GPIOI, GPIO_PIN_11);
+
+		if(btn_read)
+		{
+			if(! prev_read)
+			{
+				xTaskNotify(next_task_handle, 0 ,eNoAction);
+			}
+		}
+		prev_read = btn_read;
+		vTaskDelay(pdMS_TO_TICKS(10));
+
+		SEGGER_SYSVIEW_PrintfTarget("Button Task");
 	}
 }
 /* USER CODE END 4 */
