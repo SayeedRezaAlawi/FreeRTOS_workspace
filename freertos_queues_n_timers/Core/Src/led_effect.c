@@ -10,7 +10,7 @@
 
 void led_effect_stop(void)
 {
-	for(int i; i < 4; i++)
+	for(int i=0; i < 4; i++)
 	{
 		xTimerStop(handle_led_timer[i], portMAX_DELAY);
 	}
@@ -61,7 +61,21 @@ void LED_control(int value)
 {
 	for(int i=0; i < 4; i++)
 	{
-		HAL_GPIO_WritePin(GPIOB, (LED_GREEN_Pin << i), ((value >> i) & 0x1) );
+		switch(i)
+		{
+		case 0:
+			HAL_GPIO_WritePin(GPIOB, LED_GREEN_Pin, ((value >> i) & 0x1) );
+			break;
+		case 1:
+			HAL_GPIO_WritePin(GPIOB, LED_RED_Pin, ((value >> i) & 0x1) );
+			break;
+		case 2:
+			HAL_GPIO_WritePin(GPIOB, LED_BLUE_Pin, ((value >> i) & 0x1) );
+			break;
+		case 3:
+			HAL_GPIO_WritePin(GPIOB, LED_RED2_Pin, ((value >> i) & 0x1) );
+			break;
+		}
 	}
 
 }
@@ -75,7 +89,7 @@ void led_effect1(void)
 void led_effect2(void)
 {
 	static int flag = 1;
-	(flag ^= 1) ? turn_on_even_leds() : turn_on_all_leds();
+	(flag ^= 1) ? turn_on_even_leds() : turn_on_odd_leds();
 }
 
 void led_effect3(void)

@@ -53,6 +53,8 @@ xTaskHandle handle_rtc_task;
 
 xTimerHandle handle_led_timer[4];
 
+xTimerHandle rtc_timer;
+
 QueueHandle_t q_data;
 QueueHandle_t q_print;
 
@@ -67,6 +69,7 @@ static void MX_RTC_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void led_effect_callback(xTimerHandle xTimer);
+void rtc_report_callback(xTimerHandle xTimer);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -142,6 +145,9 @@ int main(void)
   }
 
 
+  rtc_timer = xTimerCreate("rtc_timer", pdMS_TO_TICKS(1000), pdTRUE, NULL, rtc_report_callback);
+
+
   HAL_UART_Receive_IT(&huart1, (uint8_t*)&user_data, 1);
 
   vTaskStartScheduler();
@@ -171,7 +177,7 @@ void SystemClock_Config(void)
   /** Configure the main internal regulator output voltage
   */
   __HAL_RCC_PWR_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
@@ -182,11 +188,18 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 10;
-  RCC_OscInitStruct.PLL.PLLN = 210;
+  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLN = 216;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Activate the Over-Drive mode
+  */
+  if (HAL_PWREx_EnableOverDrive() != HAL_OK)
   {
     Error_Handler();
   }
@@ -200,7 +213,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK)
   {
     Error_Handler();
   }
@@ -777,6 +790,13 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void rtc_report_callback(xTimerHandle xTimer)
+{
+	show_time_date_itm();
+}
+
+
 void led_effect_callback(xTimerHandle xTimer)
 {
 	int id;
@@ -806,35 +826,31 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	uint8_t dummy;
 
-//	const char * txt = "HAL\n";
-//	HAL_UART_Transmit(&huart1, (uint8_t*)txt, strlen((char*)txt), HAL_MAX_DELAY);
+	for(uint32_t i = 0 ; i < 4000 ; i++);
 
-	if(xQueueIsQueueFullFromISR(q_data) == pdFALSE)
+	if(! xQueueIsQueueFullFromISR(q_data))
 	{
-		/* Enqueue data byte */
-		xQueueSendFromISR(q_data,(void*)&user_data,NULL);
-	}
-	else
-	{
+		/*Enqueue data byte */
+		xQueueSendFromISR(q_data , (void*)&user_data , NULL);
+	}else{
 		if(user_data == '\n')
 		{
-			/* Dequeue data byte from queue and make space for \n charechter*/
-			xQueueReceiveFromISR(q_data, (void*)&dummy, NULL);
-
-			/* Enqueue \n */
-			xQueueSendFromISR(q_data, (void*)&user_data, NULL);
+			/*Make sure that last data byte of the queue is '\n' */
+			xQueueReceiveFromISR(q_data,(void*)&dummy,NULL);
+			xQueueSendFromISR(q_data ,(void*)&user_data , NULL);
 		}
 	}
 
-	if(user_data == '\n')
-	{
-		/* Send notification to cmd handler task if user_date == \n */
-		xTaskNotifyFromISR(handle_cmd_task,0,eNoAction,NULL);
+	/*Send notification to command handling task if user_data = '\n' */
+	if( user_data == '\n' ){
+		/*send notification to command handling task */
+		xTaskNotifyFromISR (handle_cmd_task,0,eNoAction,NULL);
 	}
-	else
 
-	/* Enable the uart data byte reception again in IT mode */
-	HAL_UART_Receive_IT(&huart1, (uint8_t*)&user_data, 1);
+	/* Enable UART data byte reception again in IT mode */
+	 HAL_UART_Receive_IT(&huart1, (uint8_t*)&user_data, 1);
+
+
 }
 
 /* USER CODE END 4 */

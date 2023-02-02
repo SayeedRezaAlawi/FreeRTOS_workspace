@@ -61,6 +61,7 @@ typedef enum
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
 extern UART_HandleTypeDef huart1;
+extern RTC_HandleTypeDef hrtc;
 
 extern xTaskHandle handle_menu_task;
 extern xTaskHandle handle_cmd_task;
@@ -70,6 +71,8 @@ extern xTaskHandle handle_rtc_task;
 
 extern xTimerHandle handle_led_timer[4];
 //extern xTimerHandle handle_led_timer[4];
+
+extern xTimerHandle rtc_timer;
 
 extern QueueHandle_t q_data;
 extern QueueHandle_t q_print;
@@ -101,6 +104,10 @@ void led_effect2(void);
 void led_effect3(void);
 void led_effect4(void);
 
+void show_time_date(void);
+void rtc_configure_time(RTC_TimeTypeDef *time);
+void rtc_configure_date(RTC_DateTypeDef *date);
+int validate_rtc_information(RTC_TimeTypeDef *time,RTC_DateTypeDef *date);
 
 
 /* USER CODE END EFP */
