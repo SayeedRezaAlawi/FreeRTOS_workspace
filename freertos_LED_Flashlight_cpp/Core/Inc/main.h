@@ -41,6 +41,8 @@ extern "C" {
 extern void SEGGER_UART_init(uint32_t);
 
 extern void button_interrupt_handler(void);
+
+extern xTimerHandle timer;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
